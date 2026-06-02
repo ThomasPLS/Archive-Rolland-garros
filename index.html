@@ -353,14 +353,17 @@
 
     /* ── ÉTOILES ── */
     .star-row {
+      position: absolute;
+      top: 0;
+      left: 0;
       display: flex;
       align-items: center;
       gap: 2px;
-      margin-bottom: 3px;
       height: 16px;
+      z-index: 2;
     }
     .star-row .star {
-      font-size: 13px;
+      font-size: 12px;
       color: #ddd0c8;
       cursor: pointer;
       line-height: 1;
@@ -558,9 +561,9 @@ const ROUNDS = [
 
 const SLOT_H    = 36;   // px: one player row
 const SEP_H     = 3;    // px: gap between 2 players in a match
-const FOOTER_H  = 45;   // px: star row (19px) + score/video row (26px)
+const FOOTER_H  = 26;   // px: score + video row
 const MATCH_H   = SLOT_H * 2 + SEP_H;   // 75 — players only
-const GAP_H     = FOOTER_H + 14;        // footer + breathing room
+const GAP_H     = FOOTER_H + 14;        // footer + breathing room = 40
 const COL_W     = 260;  // px: player column width (wide enough for score+video+button)
 const GAP_COL   = 48;   // px: horizontal gap between round columns
 const LPAD      = 28;   // label row height
@@ -783,8 +786,9 @@ function buildGrid(grid, b) {
       const w1 = match.w === '1';
       const w2 = match.w === '2';
 
+      const starTop = Math.max(4, topPad - 18);
       wrap.innerHTML = `
-        <div class="star-row" id="stars_${round.key}_${idx}">
+        <div class="star-row" id="stars_${round.key}_${idx}" style="top:${starTop}px">
           ${[1,2,3,4,5].map(n => `<span class="star${(match.stars||0) >= n ? ' lit' : ''}" data-n="${n}" onclick="setStar('${round.key}',${idx},${n})">★</span>`).join('')}
         </div>
         <div class="pslot${w1 ? ' winner' : ''}" id="ps_${round.key}_${idx}_1">
