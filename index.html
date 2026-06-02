@@ -292,12 +292,12 @@
     .match-footer {
       display: flex;
       align-items: center;
-      gap: 4px;
-      margin-top: 2px;
-      margin-bottom: 8px;
+      gap: 5px;
+      margin-top: 0;
+      margin-bottom: 10px;
       height: 22px;
       width: 100%;
-      overflow: visible;
+      overflow: hidden;
     }
     .score-inp {
       flex: 1;
@@ -350,56 +350,6 @@
     }
     .video-btn:hover { background: var(--clay-dark); }
     .video-btn:disabled { background: #cbb6a8; border-color: #cbb6a8; cursor: default; opacity: 0.6; }
-
-    /* ── ÉTOILES (dans le footer, inline) ── */
-    .star-row {
-      display: flex;
-      align-items: center;
-      gap: 1px;
-      flex-shrink: 0;
-      height: 22px;
-    }
-    .star-row .star {
-      font-size: 11px;
-      color: #ddd0c8;
-      cursor: pointer;
-      line-height: 1;
-      transition: color 0.1s, transform 0.1s;
-      user-select: none;
-    }
-    .star-row .star.lit { color: var(--gold); }
-    .star-row .star:hover { transform: scale(1.15); }
-    body.reader-mode .star-row .star { cursor: default; }
-    body.reader-mode .star-row .star:hover { transform: none; }
-    /* Cacher les étoiles vides en mode lecteur */
-    body.reader-mode .star-row:not(:has(.star.lit)) { display: none; }
-
-    /* ── MATCH AVEC VIDÉO DISPONIBLE ── */
-    .match-wrap.has-video {
-      background: rgba(184, 50, 36, 0.06);
-      border-radius: 7px;
-    }
-    .match-wrap.has-video .pslot {
-      border-color: #e8a09a;
-    }
-    .match-wrap.has-video .pslot.winner {
-      border-color: var(--winner-border);
-    }
-    .match-wrap.has-video .score-inp,
-    .match-wrap.has-video .video-inp {
-      border-color: #e8a09a;
-    }
-    /* petit indicateur discret */
-    .match-wrap.has-video::before {
-      content: '📹';
-      position: absolute;
-      top: 3px;
-      right: 4px;
-      font-size: 9px;
-      opacity: 0.55;
-      line-height: 1;
-      z-index: 1;
-    }
 
     /* ── MODE LECTEUR ── */
     body.reader-mode input,
@@ -588,7 +538,7 @@ function getY(id) { return ST.years.find(y => y.id === id); }
 function emptyBracket() {
   const b = { champion:'' };
   ROUNDS.forEach(r => {
-    b[r.key] = Array.from({ length: r.n }, () => ({ p1:'', p2:'', s1:'', s2:'', w:null, score:'', video:'', stars:0 }));
+    b[r.key] = Array.from({ length: r.n }, () => ({ p1:'', p2:'', s1:'', s2:'', w:null, score:'', video:'' }));
   });
   return b;
 }
@@ -654,7 +604,6 @@ function collectDOM() {
       m.p2 = el.querySelector('[data-p2]')?.value || '';
       m.score = el.querySelector('[data-score]')?.value || '';
       m.video = el.querySelector('[data-video]')?.value || '';
-      // stars are stored directly via setStar(), no DOM read needed
     });
   });
   const ce = document.getElementById('champion-inp');
@@ -782,10 +731,6 @@ function buildGrid(grid, b) {
 
       const w1 = match.w === '1';
       const w2 = match.w === '2';
-      const stars = match.stars || 0;
-      const starsHtml = [1,2,3,4,5].map(n =>
-        `<span class="star${stars >= n ? ' lit' : ''}" data-n="${n}" onclick="setStar('${round.key}',${idx},${n})">&#9733;</span>`
-      ).join('');
 
       wrap.innerHTML = `
         <div class="pslot${w1 ? ' winner' : ''}" id="ps_${round.key}_${idx}_1">
@@ -796,10 +741,9 @@ function buildGrid(grid, b) {
           <input type="text" data-p2 placeholder="Joueur·se" value="${esc(match.p2)}" oninput="saveST()" />
         </div>
         <div class="match-footer">
-          <div class="star-row" id="stars_${round.key}_${idx}">${starsHtml}</div>
-          <input class="score-inp" type="text" data-score placeholder="Score…" value="${esc(match.score||'')}" oninput="saveST()" />
-          <input class="video-inp" type="text" data-video placeholder="Vidéo…" value="${esc(match.video||'')}" oninput="updateVideoBtn(this)" />
-          <button class="video-btn" onclick="openVideo(this)" ${match.video ? '' : 'disabled'} title="Voir la vid&#233;o">&#9654;</button>
+          <input class="score-inp" type="text" data-score placeholder="Score du match…" value="${esc(match.score||'')}" oninput="saveST()" />
+          <input class="video-inp" type="text" data-video placeholder="Lien vidéo…" value="${esc(match.video||'')}" oninput="updateVideoBtn(this)" />
+          <button class="video-btn" onclick="openVideo(this)" ${match.video ? '' : 'disabled'} title="Voir la vidéo">▶ Vidéo</button>
         </div>`;
 
       // Double-click to mark winner
@@ -808,9 +752,6 @@ function buildGrid(grid, b) {
       });
 
       matchesArea.appendChild(wrap);
-
-      // Highlight si vidéo disponible
-      if (match.video && match.video.trim()) wrap.classList.add('has-video');
     });
 
     grid.appendChild(col);
@@ -944,28 +885,7 @@ function openVideo(btn) {
 function updateVideoBtn(inp) {
   const btn = inp.nextElementSibling;
   if (btn) btn.disabled = !inp.value.trim();
-  // Surbrillance rouge si vidéo renseignée
-  const wrap = inp.closest('.match-wrap');
-  if (wrap) wrap.classList.toggle('has-video', !!inp.value.trim());
   saveST();
-}
-
-// ── ÉTOILES ──
-function setStar(roundKey, idx, n) {
-  if (!isEditor) return;
-  collectDOM();
-  const y = getY(curY); if (!y) return;
-  const match = y[curG][roundKey][idx];
-  // Clic sur la même étoile = réinitialiser à 0
-  match.stars = (match.stars === n) ? 0 : n;
-  saveST();
-  // Mettre à jour l'affichage des étoiles
-  const row = document.getElementById(`stars_${roundKey}_${idx}`);
-  if (row) {
-    row.querySelectorAll('.star').forEach(s => {
-      s.classList.toggle('lit', +s.dataset.n <= match.stars);
-    });
-  }
 }
 
 // ═══════════════════════════════════════════════════
