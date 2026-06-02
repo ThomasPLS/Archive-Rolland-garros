@@ -353,26 +353,27 @@
 
     /* ── ÉTOILES ── */
     .star-row {
-      position: absolute;
-      top: 0;
-      left: 0;
       display: flex;
       align-items: center;
       gap: 2px;
-      height: 16px;
+      height: 0;
+      overflow: visible;
+      position: relative;
       z-index: 2;
+      pointer-events: none;
     }
     .star-row .star {
-      font-size: 12px;
+      font-size: 11px;
       color: #ddd0c8;
       cursor: pointer;
       line-height: 1;
       transition: color 0.1s, transform 0.1s;
       user-select: none;
+      pointer-events: all;
     }
     .star-row .star.lit { color: var(--gold); }
     .star-row .star:hover { transform: scale(1.2); }
-    body.reader-mode .star-row .star { cursor: default; }
+    body.reader-mode .star-row .star { cursor: default; pointer-events: none; }
     body.reader-mode .star-row .star:hover { transform: none; }
     /* Cacher les étoiles vides en mode lecteur */
     body.reader-mode .star-row:not(:has(.star.lit)) { display: none; }
@@ -776,6 +777,21 @@ function buildGrid(grid, b) {
     const topPad = (groupH - MATCH_H - FOOTER_H) / 2;
 
     b[round.key].forEach((match, idx) => {
+      // Étoiles : élément séparé à hauteur zéro, positionné par rapport au paddingTop du wrap
+      const starEl = document.createElement('div');
+      starEl.className = 'star-row';
+      starEl.id = `stars_${round.key}_${idx}`;
+      // On le place comme un spacer de hauteur 0 qui déborde vers le bas
+      starEl.style.height = '0';
+      starEl.style.overflow = 'visible';
+      starEl.style.position = 'relative';
+      starEl.style.top = (topPad - 16) + 'px';
+      starEl.style.marginTop = '0';
+      starEl.innerHTML = [1,2,3,4,5].map(n =>
+        `<span class="star${(match.stars||0) >= n ? ' lit' : ''}" data-n="${n}" onclick="setStar('${round.key}',${idx},${n})">★</span>`
+      ).join('');
+      matchesArea.appendChild(starEl);
+
       const wrap = document.createElement('div');
       wrap.className = 'match-wrap';
       wrap.id = `m_${round.key}_${idx}`;
@@ -786,11 +802,7 @@ function buildGrid(grid, b) {
       const w1 = match.w === '1';
       const w2 = match.w === '2';
 
-      const starTop = Math.max(4, topPad - 18);
       wrap.innerHTML = `
-        <div class="star-row" id="stars_${round.key}_${idx}" style="top:${starTop}px">
-          ${[1,2,3,4,5].map(n => `<span class="star${(match.stars||0) >= n ? ' lit' : ''}" data-n="${n}" onclick="setStar('${round.key}',${idx},${n})">★</span>`).join('')}
-        </div>
         <div class="pslot${w1 ? ' winner' : ''}" id="ps_${round.key}_${idx}_1">
           <input type="text" data-p1 placeholder="Joueur·se" value="${esc(match.p1)}" oninput="saveST()" />
         </div>
