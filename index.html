@@ -351,6 +351,56 @@
     .video-btn:hover { background: var(--clay-dark); }
     .video-btn:disabled { background: #cbb6a8; border-color: #cbb6a8; cursor: default; opacity: 0.6; }
 
+    /* ── ÉTOILES ── */
+    .star-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-bottom: 3px;
+      height: 16px;
+    }
+    .star-row .star {
+      font-size: 13px;
+      color: #ddd0c8;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.1s, transform 0.1s;
+      user-select: none;
+    }
+    .star-row .star.lit { color: var(--gold); }
+    .star-row .star:hover { transform: scale(1.2); }
+    body.reader-mode .star-row .star { cursor: default; }
+    body.reader-mode .star-row .star:hover { transform: none; }
+    /* Cacher les étoiles vides en mode lecteur */
+    body.reader-mode .star-row:not(:has(.star.lit)) { display: none; }
+
+    /* ── MATCH AVEC VIDÉO DISPONIBLE ── */
+    .match-wrap.has-video {
+      background: rgba(184, 50, 36, 0.06);
+      border-radius: 7px;
+    }
+    .match-wrap.has-video .pslot {
+      border-color: #e8a09a;
+    }
+    .match-wrap.has-video .pslot.winner {
+      border-color: var(--winner-border);
+    }
+    .match-wrap.has-video .score-inp,
+    .match-wrap.has-video .video-inp {
+      border-color: #e8a09a;
+    }
+    /* petit indicateur discret */
+    .match-wrap.has-video::before {
+      content: '📹';
+      position: absolute;
+      top: 3px;
+      right: 4px;
+      font-size: 9px;
+      opacity: 0.55;
+      line-height: 1;
+      z-index: 1;
+    }
+
     /* ── MODE LECTEUR ── */
     body.reader-mode input,
     body.reader-mode .score-inp,
@@ -508,9 +558,9 @@ const ROUNDS = [
 
 const SLOT_H    = 36;   // px: one player row
 const SEP_H     = 3;    // px: gap between 2 players in a match
-const FOOTER_H  = 26;   // px: score + video row
+const FOOTER_H  = 45;   // px: star row (19px) + score/video row (26px)
 const MATCH_H   = SLOT_H * 2 + SEP_H;   // 75 — players only
-const GAP_H     = FOOTER_H + 14;        // footer + breathing room = 40
+const GAP_H     = FOOTER_H + 14;        // footer + breathing room
 const COL_W     = 260;  // px: player column width (wide enough for score+video+button)
 const GAP_COL   = 48;   // px: horizontal gap between round columns
 const LPAD      = 28;   // label row height
@@ -538,7 +588,7 @@ function getY(id) { return ST.years.find(y => y.id === id); }
 function emptyBracket() {
   const b = { champion:'' };
   ROUNDS.forEach(r => {
-    b[r.key] = Array.from({ length: r.n }, () => ({ p1:'', p2:'', s1:'', s2:'', w:null, score:'', video:'' }));
+    b[r.key] = Array.from({ length: r.n }, () => ({ p1:'', p2:'', s1:'', s2:'', w:null, score:'', video:'', stars:0 }));
   });
   return b;
 }
@@ -604,6 +654,7 @@ function collectDOM() {
       m.p2 = el.querySelector('[data-p2]')?.value || '';
       m.score = el.querySelector('[data-score]')?.value || '';
       m.video = el.querySelector('[data-video]')?.value || '';
+      // stars are stored directly via setStar(), no DOM read needed
     });
   });
   const ce = document.getElementById('champion-inp');
@@ -733,6 +784,9 @@ function buildGrid(grid, b) {
       const w2 = match.w === '2';
 
       wrap.innerHTML = `
+        <div class="star-row" id="stars_${round.key}_${idx}">
+          ${[1,2,3,4,5].map(n => `<span class="star${(match.stars||0) >= n ? ' lit' : ''}" data-n="${n}" onclick="setStar('${round.key}',${idx},${n})">★</span>`).join('')}
+        </div>
         <div class="pslot${w1 ? ' winner' : ''}" id="ps_${round.key}_${idx}_1">
           <input type="text" data-p1 placeholder="Joueur·se" value="${esc(match.p1)}" oninput="saveST()" />
         </div>
@@ -752,6 +806,9 @@ function buildGrid(grid, b) {
       });
 
       matchesArea.appendChild(wrap);
+
+      // Highlight si vidéo disponible
+      if (match.video && match.video.trim()) wrap.classList.add('has-video');
     });
 
     grid.appendChild(col);
@@ -885,7 +942,28 @@ function openVideo(btn) {
 function updateVideoBtn(inp) {
   const btn = inp.nextElementSibling;
   if (btn) btn.disabled = !inp.value.trim();
+  // Surbrillance rouge si vidéo renseignée
+  const wrap = inp.closest('.match-wrap');
+  if (wrap) wrap.classList.toggle('has-video', !!inp.value.trim());
   saveST();
+}
+
+// ── ÉTOILES ──
+function setStar(roundKey, idx, n) {
+  if (!isEditor) return;
+  collectDOM();
+  const y = getY(curY); if (!y) return;
+  const match = y[curG][roundKey][idx];
+  // Clic sur la même étoile = réinitialiser à 0
+  match.stars = (match.stars === n) ? 0 : n;
+  saveST();
+  // Mettre à jour l'affichage des étoiles
+  const row = document.getElementById(`stars_${roundKey}_${idx}`);
+  if (row) {
+    row.querySelectorAll('.star').forEach(s => {
+      s.classList.toggle('lit', +s.dataset.n <= match.stars);
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════
