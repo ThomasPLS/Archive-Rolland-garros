@@ -291,19 +291,13 @@
     /* Score line & video row */
     .match-footer {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
-      margin-top: 2px;
-      margin-bottom: 4px;
-      width: 100%;
-      overflow: hidden;
-    }
-    .match-footer-scores {
-      display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
+      margin-top: 0;
+      margin-bottom: 10px;
       height: 22px;
       width: 100%;
+      overflow: hidden;
     }
     .score-inp {
       flex: 1;
@@ -357,13 +351,16 @@
     .video-btn:hover { background: var(--clay-dark); }
     .video-btn:disabled { background: #cbb6a8; border-color: #cbb6a8; cursor: default; opacity: 0.6; }
 
-    /* ── ÉTOILES (première ligne du footer) ── */
+    /* ── ÉTOILES : positionnées en absolu dans le wrap, au-dessus du pslot1 ── */
     .star-row {
+      position: absolute;
+      left: 0;
       display: flex;
       align-items: center;
       gap: 1px;
-      height: 18px;
-      flex-shrink: 0;
+      height: 14px;
+      pointer-events: none;
+      z-index: 3;
     }
     .star-row .star {
       font-size: 11px;
@@ -372,6 +369,7 @@
       line-height: 1;
       transition: color 0.1s, transform 0.1s;
       user-select: none;
+      pointer-events: all;
     }
     .star-row .star.lit { color: var(--gold); }
     .star-row .star:hover { transform: scale(1.15); }
@@ -564,7 +562,7 @@ const ROUNDS = [
 
 const SLOT_H    = 36;   // px: one player row
 const SEP_H     = 3;    // px: gap between 2 players in a match
-const FOOTER_H  = 44;   // px: étoiles (18px) + score/video (22px) + gap (4px)
+const FOOTER_H  = 26;   // px: score + video row
 const MATCH_H   = SLOT_H * 2 + SEP_H;   // 75 — players only
 const GAP_H     = FOOTER_H + 14;        // footer + breathing room = 40
 const COL_W     = 260;  // px: player column width (wide enough for score+video+button)
@@ -802,13 +800,11 @@ function buildGrid(grid, b) {
           <input type="text" data-p2 placeholder="Joueur·se" value="${esc(match.p2)}" oninput="saveST()" />
         </div>
         <div class="match-footer">
-          <div class="star-row" id="stars_${round.key}_${idx}">${starsHtml}</div>
-          <div class="match-footer-scores">
-            <input class="score-inp" type="text" data-score placeholder="Score du match…" value="${esc(match.score||'')}" oninput="saveST()" />
-            <input class="video-inp" type="text" data-video placeholder="Lien vidéo…" value="${esc(match.video||'')}" oninput="updateVideoBtn(this)" />
-            <button class="video-btn" onclick="openVideo(this)" ${match.video ? '' : 'disabled'} title="Voir la vidéo">&#9654; Vidéo</button>
-          </div>
-        </div>`;
+          <input class="score-inp" type="text" data-score placeholder="Score du match…" value="${esc(match.score||'')}" oninput="saveST()" />
+          <input class="video-inp" type="text" data-video placeholder="Lien vidéo…" value="${esc(match.video||'')}" oninput="updateVideoBtn(this)" />
+          <button class="video-btn" onclick="openVideo(this)" ${match.video ? '' : 'disabled'} title="Voir la vidéo">▶ Vidéo</button>
+        </div>
+        <div class="star-row" id="stars_${round.key}_${idx}" style="top:${Math.max(2, topPad - 14)}px">${starsHtml}</div>`;
 
       // Double-click to mark winner
       wrap.querySelectorAll('.pslot').forEach((slot, pi) => {
