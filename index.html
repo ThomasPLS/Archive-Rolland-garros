@@ -7,492 +7,188 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --clay: #b83224;
-      --clay-dark: #8a1f16;
-      --green: #1b5e35;
-      --gold: #c49a3c;
-      --white: #fff;
-      --ink: #18100a;
-      --muted: #7a6555;
-      --border: #e2d0c4;
-      --card-bg: #fffaf8;
-      --clay-pale: #fdf5f0;
-      --player-border: #e0cdc4;
-      --winner-bg: #f0faf4;
-      --winner-border: #a8d4b5;
-      --winner-text: #1b5e35;
-      --connector: #cbb6a8;
+      --clay: #b83224; --clay-dark: #8a1f16; --green: #1b5e35; --gold: #c49a3c;
+      --ink: #18100a; --muted: #7a6555; --border: #e2d0c4; --clay-pale: #fdf5f0;
+      --player-border: #e0cdc4; --winner-bg: #f0faf4; --winner-border: #a8d4b5;
+      --winner-text: #1b5e35; --conn: #cbb6a8;
+      --mh: 36px; /* match slot height */
     }
+    body { font-family: 'DM Sans', sans-serif; background: var(--clay-pale); min-height: 100vh; color: var(--ink); }
 
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--clay-pale);
-      min-height: 100vh;
-      color: var(--ink);
-    }
+    /* ── HEADER ── */
+    header { background: var(--clay); padding: 28px 40px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; position: relative; overflow: hidden; }
+    header::after { content:''; position:absolute; inset:0; background: repeating-linear-gradient(135deg,transparent,transparent 20px,rgba(255,255,255,.03) 20px,rgba(255,255,255,.03) 21px); pointer-events:none; }
+    .htitle { position:relative; z-index:1; }
+    .htitle .tag { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.5); margin-bottom:6px; }
+    .htitle h1 { font-family:'Playfair Display',serif; font-size:clamp(1.4rem,4vw,2.4rem); font-weight:900; color:#fff; line-height:1.1; }
+    .htitle h1 em { font-style:italic; color:rgba(255,255,255,.65); }
+    .hcontrols { position:relative; z-index:1; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; gap:8px; padding:9px 18px; border-radius:6px; font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:500; cursor:pointer; border:none; transition:all .15s; }
+    .btn-primary { background:var(--green); color:#fff; }
+    .btn-primary:hover { background:#236640; }
+    .btn-secondary { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3); }
+    .btn-secondary:hover { background:rgba(255,255,255,.25); }
+    .mode-badge { display:inline-flex; align-items:center; padding:5px 12px; border-radius:20px; font-size:.75rem; font-weight:500; }
+    .mode-badge.reader { background:rgba(255,255,255,.15); color:rgba(255,255,255,.8); }
+    .mode-badge.editor { background:var(--gold); color:#2a1a00; }
 
-    header {
-      background: var(--clay);
-      padding: 32px 40px 24px;
+    /* ── TABS ── */
+    .tabs-bar { background:var(--clay-dark); display:flex; align-items:center; padding:0 32px; overflow-x:auto; scrollbar-width:none; }
+    .tabs-bar::-webkit-scrollbar { display:none; }
+    .tab { display:flex; align-items:center; gap:8px; padding:13px 18px; font-size:.85rem; font-weight:500; color:rgba(255,255,255,.5); cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap; transition:color .15s,border-color .15s; user-select:none; flex-shrink:0; }
+    .tab:hover { color:rgba(255,255,255,.8); }
+    .tab.active { color:#fff; border-bottom-color:var(--gold); }
+    .tab .xtab { width:17px; height:17px; border-radius:50%; background:rgba(255,255,255,.15); border:none; color:rgba(255,255,255,.7); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+    .tab .xtab:hover { background:rgba(255,255,255,.3); color:#fff; }
+    .add-tab-btn { padding:9px 15px; background:transparent; border:1px dashed rgba(255,255,255,.3); color:rgba(255,255,255,.55); border-radius:6px; font-family:'DM Sans',sans-serif; font-size:.82rem; cursor:pointer; margin-left:10px; display:flex; align-items:center; gap:6px; transition:all .15s; white-space:nowrap; flex-shrink:0; }
+    .add-tab-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
+
+    /* ── GENDER BAR ── */
+    .gender-bar { background:#fff; border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 32px; }
+    .gbtn { padding:12px 24px; font-size:.85rem; font-weight:500; color:var(--muted); background:none; border:none; border-bottom:3px solid transparent; cursor:pointer; transition:color .15s,border-color .15s; }
+    .gbtn.active { color:var(--clay); border-bottom-color:var(--clay); }
+
+    /* ── BRACKET LAYOUT ── */
+    .bracket-area { padding:24px 32px 60px; overflow-x:auto; }
+    .bracket-meta { display:flex; align-items:center; margin-bottom:16px; gap:12px; }
+    .bracket-meta .edition-label { font-family:'Playfair Display',serif; font-size:1.1rem; font-style:italic; color:var(--muted); }
+    .btn-clear { margin-left:auto; padding:7px 14px; font-family:'DM Sans',sans-serif; font-size:.78rem; background:transparent; border:1px solid var(--border); border-radius:6px; color:var(--muted); cursor:pointer; transition:all .15s; }
+    .btn-clear:hover { border-color:var(--clay); color:var(--clay); }
+    .hint { font-size:.7rem; color:var(--muted); font-style:italic; margin-bottom:16px; }
+
+    /* ── THE BRACKET ── */
+    /*
+      Technique : chaque colonne de round est un flex column.
+      Chaque "slot" (espace occupé par un match) est un flex avec align-items:center.
+      Le match est centré verticalement dans son slot.
+      Les connecteurs sont des pseudo-éléments CSS sur le slot.
+      Aucun calcul JS de pixels.
+    */
+    .bracket { display:flex; align-items:flex-start; gap:0; min-width:max-content; }
+
+    .round-col { display:flex; flex-direction:column; width:240px; flex-shrink:0; }
+    .round-label { font-size:.62rem; font-weight:500; letter-spacing:2px; text-transform:uppercase; color:var(--muted); text-align:center; padding:0 0 10px; white-space:nowrap; }
+
+    /* Slot = espace vertical que prend 1 match dans cette colonne */
+    .slot {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1;
       position: relative;
-      overflow: hidden;
+      /* Connecteur droit (vers le gap) */
     }
-    header::after {
+
+    /* Ligne horizontale sortant à droite du match */
+    .slot::after {
       content: '';
       position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(135deg, transparent, transparent 20px, rgba(255,255,255,0.03) 20px, rgba(255,255,255,0.03) 21px);
-      pointer-events: none;
+      right: -24px;
+      top: 50%;
+      width: 24px;
+      height: 1.5px;
+      background: var(--conn);
     }
-    .htitle { position: relative; z-index: 1; }
-    .htitle .tag { display: block; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
-    .htitle h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 4vw, 2.6rem); font-weight: 900; color: #fff; line-height: 1.1; }
-    .htitle h1 em { font-style: italic; color: rgba(255,255,255,0.65); }
+    /* Pas de ligne sur la dernière colonne */
+    .round-col:last-child .slot::after,
+    .champ-col .slot::after { display:none; }
 
-    .hcontrols { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; }
-
-    .tabs-bar {
-      background: var(--clay-dark);
-      display: flex;
-      align-items: center;
-      padding: 0 32px;
-      overflow-x: auto;
-      scrollbar-width: none;
+    /* Connecteur vertical dans le gap : sur les slots pairs (haut du duo) */
+    /* On utilise un div .gap-col entre chaque round */
+    .gap-col { width:48px; flex-shrink:0; display:flex; flex-direction:column; }
+    .gap-cell {
+      flex:1;
+      position:relative;
     }
-    .tabs-bar::-webkit-scrollbar { display: none; }
-
-    .tab {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 13px 18px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: rgba(255,255,255,0.5);
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      white-space: nowrap;
-      transition: color 0.15s, border-color 0.15s;
-      user-select: none;
-      flex-shrink: 0;
+    /* Ligne verticale reliant les deux horizontales */
+    .gap-cell::before {
+      content:'';
+      position:absolute;
+      left:0; /* = où arrivent les lignes horizontales */
+      top:25%; bottom:25%;
+      width:1.5px;
+      background:var(--conn);
     }
-    .tab:hover { color: rgba(255,255,255,0.8); }
-    .tab.active { color: #fff; border-bottom-color: var(--gold); }
-    .tab .xtab {
-      width: 17px; height: 17px; border-radius: 50%;
-      background: rgba(255,255,255,0.15); border: none;
-      color: rgba(255,255,255,0.7); font-size: 12px;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s; flex-shrink: 0;
+    /* Ligne horizontale vers la droite */
+    .gap-cell::after {
+      content:'';
+      position:absolute;
+      left:0; top:50%;
+      width:100%;
+      height:1.5px;
+      background:var(--conn);
     }
-    .tab .xtab:hover { background: rgba(255,255,255,0.3); color: #fff; }
+    /* Pour les gap-cells impaires (haut), la verticale part du milieu vers le bas */
+    .gap-cell.top::before { top:50%; bottom:0; }
+    /* Pour les gap-cells paires (bas), la verticale part du haut vers le milieu */
+    .gap-cell.bot::before { top:0; bottom:50%; }
 
-    .add-tab-btn {
-      padding: 9px 15px;
-      background: transparent;
-      border: 1px dashed rgba(255,255,255,0.3);
-      color: rgba(255,255,255,0.55);
-      border-radius: 6px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.82rem;
-      cursor: pointer;
-      margin-left: 10px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .add-tab-btn:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.5); }
-
-    .gender-bar {
+    /* ── MATCH CARD ── */
+    .match {
       background: #fff;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 32px;
-    }
-    .gbtn {
-      padding: 12px 24px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--muted);
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-    }
-    .gbtn.active { color: var(--clay); border-bottom-color: var(--clay); }
-    .gbtn:hover { color: var(--clay); }
-
-    .bracket-area {
-      padding: 28px 32px 60px;
-      overflow-x: auto;
-    }
-
-    .bracket-meta {
-      display: flex;
-      align-items: center;
-      margin-bottom: 16px;
-      gap: 12px;
-    }
-    .bracket-meta .edition-label {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.1rem;
-      font-style: italic;
-      color: var(--muted);
-    }
-    .btn-clear {
-      margin-left: auto;
-      padding: 7px 14px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.78rem;
-      background: transparent;
-      border: 1px solid var(--border);
       border-radius: 6px;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-clear:hover { border-color: var(--clay); color: var(--clay); }
-
-    /* ── BRACKET GRID ── */
-    .bracket-grid {
-      display: flex;
-      align-items: flex-start;
-      position: relative;
-      min-width: max-content;
-    }
-
-    .round-col {
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-      width: 260px;
-    }
-    .round-lbl {
-      font-size: 0.65rem;
-      font-weight: 500;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-align: center;
-      padding-bottom: 10px;
-      white-space: nowrap;
-    }
-
-    /* gap column between rounds */
-    .col-gap { width: 36px; flex-shrink: 0; position: relative; }
-
-    .match-wrap {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .pslot {
-      display: flex;
-      align-items: center;
-      background: #fff;
+      overflow: hidden;
       border: 1px solid var(--player-border);
-      border-radius: 5px;
-      overflow: hidden;
-      min-height: 36px;
-      transition: border-color 0.12s;
-      cursor: default;
+      margin: 4px 0;
     }
-    .pslot:hover { border-color: #b8a090; }
-    .pslot.winner { background: var(--winner-bg); border-color: var(--winner-border); }
-    .pslot input[type=text] {
-      flex: 1;
-      border: none;
-      background: transparent;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.78rem;
-      color: var(--ink);
-      padding: 5px 7px;
-      outline: none;
-      min-width: 0;
-    }
-    .pslot.winner input[type=text] { color: var(--winner-text); font-weight: 500; }
-    .pslot input::placeholder { color: #c8b4a8; font-style: italic; }
-    .match-sep { height: 3px; }
+    .match.has-video { border-color: #e8a09a; background: rgba(184,50,36,.04); }
+    .match.has-video .pslot { border-color: #e8a09a; }
 
-    /* champion */
-    .champ-col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-left: 28px;
-      flex-shrink: 0;
-    }
-    .champ-lbl {
-      font-size: 0.65rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--gold);
-      font-weight: 500;
-      padding-bottom: 10px;
-    }
-    .champ-box {
-      background: #fffdf0;
-      border: 1.5px solid var(--gold);
-      border-radius: 10px;
-      padding: 14px 18px;
-      width: 260px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-    .champ-box input {
-      width: 100%;
-      border: none;
-      background: transparent;
-      font-family: 'Playfair Display', serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      text-align: center;
-      outline: none;
-      color: var(--ink);
-    }
-    .champ-box input::placeholder { color: #c4a060; font-style: italic; font-size: 0.82rem; }
+    .pslot { display:flex; align-items:center; min-height:var(--mh); border:none; border-bottom:1px solid var(--border); overflow:hidden; transition:background .12s; }
+    .pslot:last-of-type { border-bottom:none; }
+    .pslot.winner { background:var(--winner-bg); }
+    .pslot input { flex:1; border:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:.78rem; color:var(--ink); padding:5px 7px; outline:none; min-width:0; }
+    .pslot.winner input { color:var(--winner-text); font-weight:500; }
+    .pslot input::placeholder { color:#c8b4a8; font-style:italic; }
 
-    .empty-state {
-      text-align: center;
-      padding: 80px 20px;
-      color: var(--muted);
-    }
-    .empty-state h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--ink); margin-bottom: 12px; }
+    .match-footer { display:flex; align-items:center; gap:4px; padding:3px 4px; background:#faf5f2; border-top:1px solid var(--border); }
+    .stars { display:flex; gap:1px; flex-shrink:0; }
+    .stars .s { font-size:11px; color:#ddd0c8; cursor:pointer; user-select:none; transition:color .1s; line-height:1; }
+    .stars .s.on { color:var(--gold); }
+    .score-inp { flex:1; min-width:0; border:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:.7rem; color:var(--ink); padding:2px 4px; outline:none; }
+    .score-inp::placeholder { color:#c8b4a8; font-style:italic; }
+    .video-inp { flex:1.2; min-width:0; border:none; background:transparent; font-family:'DM Sans',sans-serif; font-size:.68rem; color:var(--muted); padding:2px 4px; outline:none; }
+    .video-inp::placeholder { color:#c8b4a8; font-style:italic; }
+    .video-btn { height:20px; padding:0 6px; background:var(--clay); border:none; border-radius:3px; color:#fff; font-size:.68rem; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:background .15s; }
+    .video-btn:hover { background:var(--clay-dark); }
+    .video-btn:disabled { background:#cbb6a8; cursor:default; opacity:.6; }
 
-    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
-    .btn-primary { background: var(--green); color: #fff; box-shadow: 0 2px 10px rgba(27,94,53,0.2); }
-    .btn-primary:hover { background: #236640; }
-    .btn-secondary { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
-    .btn-secondary:hover { background: rgba(255,255,255,0.25); }
-
-    footer { text-align: center; padding: 18px; font-size: 0.73rem; color: var(--muted); border-top: 1px solid var(--border); }
-
-    .hint { font-size: 0.7rem; color: var(--muted); font-style: italic; margin-top: 6px; }
-
-    /* SVG connector overlay */
-    .conn-svg { position: absolute; top: 0; pointer-events: none; overflow: visible; }
-
-    /* Score line & video row */
-    .match-footer {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin-top: 0;
-      margin-bottom: 10px;
-      height: 22px;
-      width: 100%;
-      overflow: hidden;
-    }
-    .score-inp {
-      flex: 1;
-      min-width: 0;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: #fff;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.7rem;
-      color: var(--ink);
-      padding: 2px 6px;
-      outline: none;
-      height: 22px;
-      transition: border-color 0.12s;
-    }
-    .score-inp:focus { border-color: var(--clay); }
-    .score-inp::placeholder { color: #c8b4a8; font-style: italic; }
-    .video-inp {
-      flex: 1;
-      min-width: 0;
-      border: 1px solid var(--border);
-      border-radius: 4px 0 0 4px;
-      background: #fff;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.68rem;
-      color: var(--muted);
-      padding: 2px 5px;
-      outline: none;
-      height: 22px;
-      transition: border-color 0.12s;
-    }
-    .video-inp:focus { border-color: var(--clay); }
-    .video-inp::placeholder { color: #c8b4a8; font-style: italic; }
-    .video-btn {
-      height: 22px;
-      padding: 0 7px;
-      background: var(--clay);
-      border: 1px solid var(--clay);
-      border-left: none;
-      border-radius: 0 4px 4px 0;
-      color: #fff;
-      font-size: 0.72rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      white-space: nowrap;
-      transition: background 0.15s;
-      flex-shrink: 0;
-    }
-    .video-btn:hover { background: var(--clay-dark); }
-    .video-btn:disabled { background: #cbb6a8; border-color: #cbb6a8; cursor: default; opacity: 0.6; }
-
-    /* ── ÉTOILES : positionnées en absolu dans le wrap, au-dessus du pslot1 ── */
-    .star-row {
-      position: absolute;
-      left: 0;
-      display: flex;
-      align-items: center;
-      gap: 1px;
-      height: 14px;
-      pointer-events: none;
-      z-index: 3;
-    }
-    .star-row .star {
-      font-size: 11px;
-      color: #ddd0c8;
-      cursor: pointer;
-      line-height: 1;
-      transition: color 0.1s, transform 0.1s;
-      user-select: none;
-      pointer-events: all;
-    }
-    .star-row .star.lit { color: var(--gold); }
-    .star-row .star:hover { transform: scale(1.15); }
-    body.reader-mode .star-row .star { cursor: default; }
-    body.reader-mode .star-row .star:hover { transform: none; }
-    /* Cacher les étoiles vides en mode lecteur */
-    body.reader-mode .star-row:not(:has(.star.lit)) { display: none; }
-
-    /* ── MATCH AVEC VIDÉO DISPONIBLE ── */
-    .match-wrap.has-video {
-      background: rgba(184, 50, 36, 0.06);
-      border-radius: 7px;
-    }
-    .match-wrap.has-video .pslot {
-      border-color: #e8a09a;
-    }
-    .match-wrap.has-video .pslot.winner {
-      border-color: var(--winner-border);
-    }
-    .match-wrap.has-video .score-inp,
-    .match-wrap.has-video .video-inp {
-      border-color: #e8a09a;
-    }
-    /* petit indicateur discret */
-    .match-wrap.has-video::before {
-      content: '📹';
-      position: absolute;
-      top: 3px;
-      right: 4px;
-      font-size: 9px;
-      opacity: 0.55;
-      line-height: 1;
-      z-index: 1;
-    }
+    /* ── CHAMPION ── */
+    .champ-col { padding-left:24px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .champ-lbl { font-size:.62rem; letter-spacing:2px; text-transform:uppercase; color:var(--gold); font-weight:500; margin-bottom:8px; }
+    .champ-box { background:#fffdf0; border:1.5px solid var(--gold); border-radius:10px; padding:14px 18px; width:220px; display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .champ-box input { width:100%; border:none; background:transparent; font-family:'Playfair Display',serif; font-size:.95rem; font-weight:700; text-align:center; outline:none; color:var(--ink); }
+    .champ-box input::placeholder { color:#c4a060; font-style:italic; font-size:.82rem; }
 
     /* ── MODE LECTEUR ── */
-    body.reader-mode input,
-    body.reader-mode .score-inp,
-    body.reader-mode .video-inp {
-      pointer-events: none;
-      user-select: none;
-    }
-    body.reader-mode .pslot { cursor: default; }
-    body.reader-mode .pslot:hover { border-color: var(--player-border); }
+    body.reader-mode input { pointer-events:none; user-select:none; }
+    body.reader-mode .pslot:has(input[value=""]) { background:#f0e8e3; }
+    body.reader-mode .match-footer { opacity:.8; }
+    body.reader-mode .stars .s { cursor:default; pointer-events:none; }
+    body.reader-mode .stars:not(:has(.s.on)) { display:none; }
+    body.reader-mode .hcontrols .btn-editor-only { display:none; }
+    body.reader-mode .btn-clear { display:none; }
+    body.reader-mode .tab .xtab { display:none; }
+    body.reader-mode .add-tab-btn { display:none; }
+    body.reader-mode .hint { display:none; }
 
-    /* Cases vides grisées en mode lecteur */
-    body.reader-mode input[value=""],
-    body.reader-mode input:placeholder-shown {
-      background: #f0e8e3 !important;
-      color: transparent !important;
-    }
-    body.reader-mode .pslot:has(input[value=""]),
-    body.reader-mode .pslot:has(input:placeholder-shown) {
-      background: #f0e8e3;
-      border-color: #ddd0c8;
-    }
-    body.reader-mode .score-inp:placeholder-shown,
-    body.reader-mode .video-inp:placeholder-shown {
-      background: #ece4df !important;
-    }
-    body.reader-mode .match-footer { opacity: 0.85; }
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align:center; padding:80px 20px; color:var(--muted); }
+    .empty-state h2 { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--ink); margin-bottom:12px; }
 
-    /* Boutons cachés en mode lecteur */
-    body.reader-mode .hcontrols .btn-editor-only { display: none; }
-    body.reader-mode .btn-clear { display: none; }
-    body.reader-mode .tab .xtab { display: none; }
-    body.reader-mode .add-tab-btn { display: none; }
-    body.reader-mode .hint { display: none; }
+    /* ── MODAL ── */
+    .modal-overlay { position:fixed; inset:0; background:rgba(20,10,5,.55); display:flex; align-items:center; justify-content:center; z-index:1000; backdrop-filter:blur(3px); }
+    .modal-box { background:#fff; border-radius:14px; padding:36px 32px 28px; width:320px; box-shadow:0 20px 60px rgba(0,0,0,.25); text-align:center; }
+    .modal-box h2 { font-family:'Playfair Display',serif; font-size:1.3rem; color:var(--ink); margin-bottom:6px; }
+    .modal-box p { font-size:.82rem; color:var(--muted); margin-bottom:20px; }
+    .modal-box input { width:100%; border:1.5px solid var(--border); border-radius:7px; padding:10px 14px; font-family:'DM Sans',sans-serif; font-size:.95rem; outline:none; margin-bottom:10px; transition:border-color .15s; text-align:center; letter-spacing:3px; }
+    .modal-box input:focus { border-color:var(--clay); }
+    .modal-err { color:var(--clay); font-size:.78rem; min-height:18px; margin-bottom:10px; }
+    .btn-modal { width:100%; padding:10px; border-radius:7px; font-size:.9rem; }
+    .btn-cancel { margin-top:8px; background:none; border:none; color:var(--muted); font-size:.8rem; cursor:pointer; text-decoration:underline; }
 
-    /* Badge mode */
-    .mode-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-    }
-    .mode-badge.reader { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.8); }
-    .mode-badge.editor { background: var(--gold); color: #2a1a00; }
-
-    /* Modal mot de passe */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(20,10,5,0.55);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1000;
-      backdrop-filter: blur(3px);
-    }
-    .modal-box {
-      background: #fff;
-      border-radius: 14px;
-      padding: 36px 32px 28px;
-      width: 320px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-      text-align: center;
-    }
-    .modal-box h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.3rem;
-      color: var(--ink);
-      margin-bottom: 6px;
-    }
-    .modal-box p { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
-    .modal-box input {
-      width: 100%;
-      border: 1.5px solid var(--border);
-      border-radius: 7px;
-      padding: 10px 14px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.95rem;
-      outline: none;
-      margin-bottom: 10px;
-      transition: border-color 0.15s;
-      text-align: center;
-      letter-spacing: 3px;
-    }
-    .modal-box input:focus { border-color: var(--clay); }
-    .modal-box .modal-err { color: var(--clay); font-size: 0.78rem; min-height: 18px; margin-bottom: 10px; }
-    .modal-box .btn-modal { width: 100%; padding: 10px; border-radius: 7px; font-size: 0.9rem; }
-    .modal-box .btn-cancel { margin-top: 8px; background: none; border: none; color: var(--muted); font-size: 0.8rem; cursor: pointer; text-decoration: underline; }
+    footer { text-align:center; padding:18px; font-size:.73rem; color:var(--muted); border-top:1px solid var(--border); }
   </style>
 </head>
 <body>
@@ -505,51 +201,33 @@
   <div class="hcontrols">
     <span class="mode-badge reader" id="mode-badge">👁 Lecture seule</span>
     <button class="btn btn-secondary" onclick="toggleEditorMode()" id="btn-mode-toggle">🔓 Mode éditeur</button>
-    <button class="btn btn-secondary btn-editor-only" onclick="exportData()" title="Sauvegarder toutes les données dans un fichier">⬇ Exporter</button>
-    <label class="btn btn-secondary btn-editor-only" title="Charger des données depuis un fichier" style="cursor:pointer">
-      ⬆ Importer
-      <input type="file" accept=".json" onchange="importData(event)" style="display:none" />
-    </label>
+    <button class="btn btn-secondary btn-editor-only" onclick="exportData()">⬇ Exporter</button>
+    <label class="btn btn-secondary btn-editor-only" style="cursor:pointer">⬆ Importer<input type="file" accept=".json" onchange="importData(event)" style="display:none"/></label>
     <button class="btn btn-primary btn-editor-only" onclick="addYear()">+ Ajouter une année</button>
   </div>
 </header>
 
 <div class="tabs-bar" id="tabs-bar"></div>
-
 <div class="gender-bar" id="gender-bar" style="display:none">
   <button class="gbtn active" id="gbtn-men" onclick="switchGender('men')">Tableau Messieurs</button>
   <button class="gbtn" id="gbtn-women" onclick="switchGender('women')">Tableau Dames</button>
 </div>
+<div id="main-content"></div>
 
-<div id="main-content">
-  <div class="empty-state">
-    <h2>Aucun tableau pour l'instant</h2>
-    <p style="margin-bottom:24px">Cliquez sur <strong>+ Ajouter une année</strong> pour saisir les résultats d'une édition.</p>
-    <button class="btn btn-primary" onclick="addYear()">+ Ajouter une année</button>
-  </div>
-</div>
-
-<!-- Modal mot de passe -->
 <div class="modal-overlay" id="pwd-modal" style="display:none">
   <div class="modal-box">
     <h2>Mode Éditeur</h2>
     <p>Entrez le mot de passe pour modifier les tableaux.</p>
-    <input type="password" id="pwd-input" placeholder="••••" onkeydown="if(event.key==='Enter')checkPassword()" autofocus />
+    <input type="password" id="pwd-input" placeholder="••••" onkeydown="if(event.key==='Enter')checkPassword()"/>
     <div class="modal-err" id="pwd-err"></div>
     <button class="btn btn-primary btn-modal" onclick="checkPassword()">Valider</button>
     <br><button class="btn-cancel" onclick="closeModal()">Annuler</button>
   </div>
 </div>
 
-<footer>Roland Garros Tableaux Archive &middot; Données sauvegardées dans votre navigateur &middot; Double-clic sur un joueur pour le marquer vainqueur</footer>
+<footer>Roland Garros Tableaux Archive · Données sauvegardées dans votre navigateur · Double-clic sur un joueur pour le marquer vainqueur</footer>
 
 <script>
-// ═══════════════════════════════════════════════════
-// CONFIGURATION
-// ═══════════════════════════════════════════════════
-
-// 128 players: 7 rounds
-// R1=64 matches, R2=32, R3=16, R4=8, QF=4, SF=2, F=1
 const ROUNDS = [
   { key:'r1', label:'1er Tour',     n:64 },
   { key:'r2', label:'2e Tour',      n:32 },
@@ -560,20 +238,7 @@ const ROUNDS = [
   { key:'f',  label:'Finale',       n:1  },
 ];
 
-const SLOT_H    = 36;   // px: one player row
-const SEP_H     = 3;    // px: gap between 2 players in a match
-const FOOTER_H  = 26;   // px: score + video row
-const MATCH_H   = SLOT_H * 2 + SEP_H;   // 75 — players only
-const GAP_H     = FOOTER_H + 14;        // footer + breathing room = 40
-const COL_W     = 260;  // px: player column width (wide enough for score+video+button)
-const GAP_COL   = 48;   // px: horizontal gap between round columns
-const LPAD      = 28;   // label row height
-
-const SK = 'rg_v4';
-
-// ═══════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════
+const SK = 'rg_v4'; // même clé localStorage → tes données sont préservées
 
 let ST   = loadST();
 let curY = null;
@@ -583,507 +248,324 @@ function loadST() {
   try { const r = localStorage.getItem(SK); return r ? JSON.parse(r) : { years:[] }; }
   catch { return { years:[] }; }
 }
-function saveST() {
-  collectDOM();
-  localStorage.setItem(SK, JSON.stringify(ST));
-}
+function saveST() { collectDOM(); localStorage.setItem(SK, JSON.stringify(ST)); }
 function getY(id) { return ST.years.find(y => y.id === id); }
 
 function emptyBracket() {
   const b = { champion:'' };
   ROUNDS.forEach(r => {
-    b[r.key] = Array.from({ length: r.n }, () => ({ p1:'', p2:'', s1:'', s2:'', w:null, score:'', video:'', stars:0 }));
+    b[r.key] = Array.from({ length: r.n }, () => ({ p1:'', p2:'', w:null, score:'', video:'', stars:0 }));
   });
   return b;
 }
 
-// ═══════════════════════════════════════════════════
-// ACTIONS
-// ═══════════════════════════════════════════════════
-
+// ── ACTIONS ──
 function addYear() {
-  const yr = prompt('Entrez l\'année (ex: 2023):', '');
+  const yr = prompt("Entrez l'année (ex: 2023):", '');
   if (!yr || isNaN(+yr)) return;
   const id = 'y' + Date.now();
-  ST.years.push({ id, year: +yr, men: emptyBracket(), women: emptyBracket() });
-  saveST();
-  renderAll();
-  switchTab(id);
+  ST.years.push({ id, year:+yr, men:emptyBracket(), women:emptyBracket() });
+  saveST(); renderAll(); switchTab(id);
 }
-
 function deleteYear(id) {
   if (!confirm('Supprimer ce tableau ?')) return;
   ST.years = ST.years.filter(y => y.id !== id);
-  if (curY === id) curY = ST.years.length ? ST.years[ST.years.length - 1].id : null;
-  saveST();
-  renderAll();
+  if (curY === id) curY = ST.years.length ? ST.years[ST.years.length-1].id : null;
+  saveST(); renderAll();
 }
+function switchTab(id) { collectDOM(); curY = id; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.id===id)); renderContent(); }
+function switchGender(g) { collectDOM(); curG = g; document.getElementById('gbtn-men').classList.toggle('active',g==='men'); document.getElementById('gbtn-women').classList.toggle('active',g==='women'); renderContent(); }
+function clearBracket() { if(!confirm('Effacer toutes les données de ce tableau ?')) return; const y=getY(curY); if(!y) return; y[curG]=emptyBracket(); saveST(); renderContent(); }
 
-function switchTab(id) {
-  collectDOM();
-  curY = id;
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.id === id));
-  renderContent();
-}
-
-function switchGender(g) {
-  collectDOM();
-  curG = g;
-  document.getElementById('gbtn-men').classList.toggle('active', g === 'men');
-  document.getElementById('gbtn-women').classList.toggle('active', g === 'women');
-  renderContent();
-}
-
-function clearBracket() {
-  if (!confirm('Effacer toutes les données de ce tableau ?')) return;
-  const y = getY(curY); if (!y) return;
-  y[curG] = emptyBracket();
-  saveST();
-  renderContent();
-}
-
-// ═══════════════════════════════════════════════════
-// COLLECT DOM → STATE
-// ═══════════════════════════════════════════════════
-
+// ── COLLECT DOM → STATE ──
 function collectDOM() {
   if (!curY) return;
   const y = getY(curY); if (!y) return;
   const b = y[curG];
   ROUNDS.forEach(r => {
-    b[r.key].forEach((m, i) => {
+    b[r.key].forEach((m,i) => {
       const el = document.getElementById(`m_${r.key}_${i}`);
       if (!el) return;
-      m.p1 = el.querySelector('[data-p1]')?.value || '';
-      m.p2 = el.querySelector('[data-p2]')?.value || '';
+      m.p1    = el.querySelector('[data-p1]')?.value || '';
+      m.p2    = el.querySelector('[data-p2]')?.value || '';
       m.score = el.querySelector('[data-score]')?.value || '';
       m.video = el.querySelector('[data-video]')?.value || '';
-      // stars are stored directly via setStar(), no DOM read needed
     });
   });
   const ce = document.getElementById('champion-inp');
   if (ce) b.champion = ce.value;
 }
 
-// ═══════════════════════════════════════════════════
-// RENDER ALL
-// ═══════════════════════════════════════════════════
-
-function renderAll() {
-  renderTabs();
-  renderContent();
-}
+// ── RENDER ──
+function renderAll() { renderTabs(); renderContent(); }
 
 function renderTabs() {
   const bar = document.getElementById('tabs-bar');
   bar.innerHTML = '';
   ST.years.forEach(y => {
     const t = document.createElement('div');
-    t.className = 'tab' + (y.id === curY ? ' active' : '');
+    t.className = 'tab' + (y.id===curY?' active':'');
     t.dataset.id = y.id;
     t.innerHTML = `<span>${y.year}</span><button class="xtab" onclick="event.stopPropagation();deleteYear('${y.id}')">×</button>`;
     t.addEventListener('click', () => switchTab(y.id));
     bar.appendChild(t);
   });
   const ab = document.createElement('button');
-  ab.className = 'add-tab-btn';
-  ab.textContent = '+ Nouvelle année';
-  ab.onclick = addYear;
+  ab.className='add-tab-btn'; ab.textContent='+ Nouvelle année'; ab.onclick=addYear;
   bar.appendChild(ab);
 }
 
 function renderContent() {
   const mc = document.getElementById('main-content');
   const gb = document.getElementById('gender-bar');
-
   if (!curY || !ST.years.length) {
-    gb.style.display = 'none';
-    mc.innerHTML = `<div class="empty-state">
-      <h2>Aucun tableau pour l'instant</h2>
-      <p style="margin-bottom:24px">Cliquez sur <strong>+ Ajouter une année</strong> pour saisir les résultats d'une édition.</p>
-      <button class="btn btn-primary" onclick="addYear()">+ Ajouter une année</button>
-    </div>`;
+    gb.style.display='none';
+    mc.innerHTML=`<div class="empty-state"><h2>Aucun tableau pour l'instant</h2><p style="margin-bottom:24px">Cliquez sur <strong>+ Ajouter une année</strong> pour saisir les résultats d'une édition.</p><button class="btn btn-primary" onclick="addYear()">+ Ajouter une année</button></div>`;
     return;
   }
-
-  gb.style.display = 'flex';
+  gb.style.display='flex';
   const y = getY(curY); if (!y) return;
   const b = y[curG];
 
-  mc.innerHTML = '';
+  mc.innerHTML='';
+  const area = document.createElement('div');
+  area.className='bracket-area';
 
-  // Meta bar
-  const meta = document.createElement('div');
-  meta.className = 'bracket-area';
-  meta.style.paddingBottom = '0';
-  meta.innerHTML = `<div class="bracket-meta">
-    <span class="edition-label">Roland Garros ${y.year} &mdash; ${curG === 'men' ? 'Messieurs' : 'Dames'}</span>
+  area.innerHTML=`<div class="bracket-meta">
+    <span class="edition-label">Roland Garros ${y.year} — ${curG==='men'?'Messieurs':'Dames'}</span>
     <button class="btn-clear" onclick="clearBracket()">Effacer</button>
   </div>
-  <p class="hint">Double-clic sur un nom pour le marquer comme vainqueur du match et le propager au tour suivant.</p>`;
-  mc.appendChild(meta);
+  <p class="hint">Double-clic sur un nom pour le marquer vainqueur et le propager au tour suivant.</p>`;
 
-  const area = document.createElement('div');
-  area.className = 'bracket-area';
-  area.style.paddingTop = '12px';
-  mc.appendChild(area);
+  const bracket = document.createElement('div');
+  bracket.className = 'bracket';
 
-  const grid = document.createElement('div');
-  grid.className = 'bracket-grid';
-  grid.id = 'bracket-grid';
-  area.appendChild(grid);
-
-  buildGrid(grid, b);
-
-  // Champion col
-  // Find the vertical center of the single final match
-  requestAnimationFrame(() => {
-    const fm = document.getElementById('m_f_0');
-    const gridR = grid.getBoundingClientRect();
-    let champTop = 0;
-    if (fm) {
-      const fr = fm.getBoundingClientRect();
-      champTop = fr.top - gridR.top + (fr.height - FOOTER_H) / 2 - 60;
-    }
-    const cc = document.getElementById('champ-col');
-    if (cc) cc.style.paddingTop = Math.max(LPAD, champTop) + 'px';
-    drawAllConnectors(grid, b);
-  });
-}
-
-// ═══════════════════════════════════════════════════
-// BUILD GRID
-// ═══════════════════════════════════════════════════
-
-function buildGrid(grid, b) {
+  // Build each round column + gap column
   ROUNDS.forEach((round, ri) => {
-    // Round column
     const col = document.createElement('div');
     col.className = 'round-col';
-    col.id = `col_${round.key}`;
 
     const lbl = document.createElement('div');
-    lbl.className = 'round-lbl';
+    lbl.className = 'round-label';
     lbl.textContent = round.label;
     col.appendChild(lbl);
 
-    const matchesArea = document.createElement('div');
-    matchesArea.style.position = 'relative';
-    col.appendChild(matchesArea);
-
-    // Each match occupies 2^ri "base slots"
-    const factor = Math.pow(2, ri);
-    const groupH = factor * (MATCH_H + GAP_H) - GAP_H + FOOTER_H;
-    const topPad = (groupH - MATCH_H - FOOTER_H) / 2;
-
+    // Each match gets a "slot" — slots all have equal flex:1 so they divide the column evenly
     b[round.key].forEach((match, idx) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'match-wrap';
-      wrap.id = `m_${round.key}_${idx}`;
-      wrap.style.height = groupH + 'px';
-      wrap.style.paddingTop = topPad + 'px';
-      wrap.style.paddingBottom = (groupH - MATCH_H - FOOTER_H - topPad) + 'px';
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      // Hide the connector line for the last round (Finale)
+      if (ri === ROUNDS.length - 1) slot.style.setProperty('--no-conn','1');
 
-      const w1 = match.w === '1';
-      const w2 = match.w === '2';
-      const stars = match.stars || 0;
-      const starsHtml = [1,2,3,4,5].map(n =>
-        `<span class="star${stars >= n ? ' lit' : ''}" data-n="${n}" onclick="setStar('${round.key}',${idx},${n})">&#9733;</span>`
-      ).join('');
-
-      wrap.innerHTML = `
-        <div class="pslot${w1 ? ' winner' : ''}" id="ps_${round.key}_${idx}_1">
-          <input type="text" data-p1 placeholder="Joueur·se" value="${esc(match.p1)}" oninput="saveST()" />
-        </div>
-        <div class="match-sep"></div>
-        <div class="pslot${w2 ? ' winner' : ''}" id="ps_${round.key}_${idx}_2">
-          <input type="text" data-p2 placeholder="Joueur·se" value="${esc(match.p2)}" oninput="saveST()" />
-        </div>
-        <div class="match-footer">
-          <input class="score-inp" type="text" data-score placeholder="Score du match…" value="${esc(match.score||'')}" oninput="saveST()" />
-          <input class="video-inp" type="text" data-video placeholder="Lien vidéo…" value="${esc(match.video||'')}" oninput="updateVideoBtn(this)" />
-          <button class="video-btn" onclick="openVideo(this)" ${match.video ? '' : 'disabled'} title="Voir la vidéo">▶ Vidéo</button>
-        </div>
-        <div class="star-row" id="stars_${round.key}_${idx}" style="top:${Math.max(2, topPad - 14)}px">${starsHtml}</div>`;
-
-      // Double-click to mark winner
-      wrap.querySelectorAll('.pslot').forEach((slot, pi) => {
-        slot.addEventListener('dblclick', () => markWinner(round.key, idx, pi + 1, ri));
-      });
-
-      matchesArea.appendChild(wrap);
-
-      // Highlight si vidéo disponible
-      if (match.video && match.video.trim()) wrap.classList.add('has-video');
+      const card = buildMatchCard(match, round.key, idx, ri);
+      slot.appendChild(card);
+      col.appendChild(slot);
     });
 
-    grid.appendChild(col);
+    bracket.appendChild(col);
 
-    // Gap column (for SVG connectors), except after last round
+    // Gap column between rounds
     if (ri < ROUNDS.length - 1) {
-      const gap = document.createElement('div');
-      gap.className = 'col-gap';
-      gap.id = `gap_${ri}`;
-      gap.style.width = GAP_COL + 'px';
-      grid.appendChild(gap);
+      const gap = buildGapCol(round.n);
+      bracket.appendChild(gap);
     }
   });
 
-  // Champion column
-  const cc = document.createElement('div');
-  cc.className = 'champ-col';
-  cc.id = 'champ-col';
-  cc.innerHTML = `
-    <div class="champ-lbl">🏆 Champion·ne</div>
+  // Champion
+  const champ = document.createElement('div');
+  champ.className = 'champ-col';
+  champ.innerHTML = `<div class="champ-lbl">🏆 Champion·ne</div>
     <div class="champ-box">
       <div style="font-size:24px">🏆</div>
-      <input id="champion-inp" type="text" placeholder="Vainqueur…" value="${esc(getY(curY)?.[curG]?.champion || '')}" oninput="saveST()" />
+      <input id="champion-inp" type="text" placeholder="Vainqueur…" value="${esc(b.champion||'')}" oninput="saveST()"/>
     </div>`;
-  grid.appendChild(cc);
+  bracket.appendChild(champ);
+
+  area.appendChild(bracket);
+  mc.appendChild(area);
 }
 
-function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
-// ═══════════════════════════════════════════════════
-// MODE ÉDITEUR / LECTEUR
-// ═══════════════════════════════════════════════════
-
-const EDITOR_PWD = 'toto';
-let isEditor = false;
-
-function toggleEditorMode() {
-  if (isEditor) {
-    // Repasser en mode lecteur
-    isEditor = false;
-    applyMode();
-  } else {
-    // Ouvrir modal mot de passe
-    document.getElementById('pwd-modal').style.display = 'flex';
-    document.getElementById('pwd-err').textContent = '';
-    document.getElementById('pwd-input').value = '';
-    setTimeout(() => document.getElementById('pwd-input').focus(), 50);
+function buildGapCol(n) {
+  // n = number of matches in the LEFT round
+  // We need n/2 pairs → n gap-cells total (top+bot for each pair)
+  const gap = document.createElement('div');
+  gap.className = 'gap-col';
+  for (let i = 0; i < n; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'gap-cell ' + (i % 2 === 0 ? 'top' : 'bot');
+    gap.appendChild(cell);
   }
+  return gap;
 }
 
-function checkPassword() {
-  const val = document.getElementById('pwd-input').value;
-  if (val === EDITOR_PWD) {
-    isEditor = true;
-    closeModal();
-    applyMode();
-  } else {
-    document.getElementById('pwd-err').textContent = '❌ Mot de passe incorrect';
-    document.getElementById('pwd-input').value = '';
-    document.getElementById('pwd-input').focus();
+function buildMatchCard(match, rk, idx, ri) {
+  const w1 = match.w === '1';
+  const w2 = match.w === '2';
+  const stars = match.stars || 0;
+
+  const card = document.createElement('div');
+  card.className = 'match' + (match.video?.trim() ? ' has-video' : '');
+  card.id = `m_${rk}_${idx}`;
+
+  // Player 1
+  const ps1 = document.createElement('div');
+  ps1.className = 'pslot' + (w1?' winner':'');
+  ps1.id = `ps_${rk}_${idx}_1`;
+  const inp1 = document.createElement('input');
+  inp1.type='text'; inp1.setAttribute('data-p1',''); inp1.placeholder='Joueur·se'; inp1.value=match.p1||'';
+  inp1.oninput = () => saveST();
+  ps1.appendChild(inp1);
+  ps1.addEventListener('dblclick', () => markWinner(rk, idx, 1, ri));
+  card.appendChild(ps1);
+
+  // Player 2
+  const ps2 = document.createElement('div');
+  ps2.className = 'pslot' + (w2?' winner':'');
+  ps2.id = `ps_${rk}_${idx}_2`;
+  const inp2 = document.createElement('input');
+  inp2.type='text'; inp2.setAttribute('data-p2',''); inp2.placeholder='Joueur·se'; inp2.value=match.p2||'';
+  inp2.oninput = () => saveST();
+  ps2.appendChild(inp2);
+  ps2.addEventListener('dblclick', () => markWinner(rk, idx, 2, ri));
+  card.appendChild(ps2);
+
+  // Footer: stars + score + video
+  const footer = document.createElement('div');
+  footer.className = 'match-footer';
+
+  const starsDiv = document.createElement('div');
+  starsDiv.className = 'stars';
+  starsDiv.id = `stars_${rk}_${idx}`;
+  for (let n=1;n<=5;n++) {
+    const s = document.createElement('span');
+    s.className = 's' + (stars>=n?' on':'');
+    s.dataset.n = n;
+    s.textContent = '★';
+    s.onclick = () => setStar(rk, idx, n);
+    starsDiv.appendChild(s);
   }
+  footer.appendChild(starsDiv);
+
+  const scoreInp = document.createElement('input');
+  scoreInp.className='score-inp'; scoreInp.type='text'; scoreInp.setAttribute('data-score','');
+  scoreInp.placeholder='Score…'; scoreInp.value=match.score||'';
+  scoreInp.oninput=()=>saveST();
+  footer.appendChild(scoreInp);
+
+  const videoInp = document.createElement('input');
+  videoInp.className='video-inp'; videoInp.type='text'; videoInp.setAttribute('data-video','');
+  videoInp.placeholder='Vidéo…'; videoInp.value=match.video||'';
+  videoInp.oninput=()=>{ updateVideoBtn(videoInp); };
+  footer.appendChild(videoInp);
+
+  const videoBtn = document.createElement('button');
+  videoBtn.className='video-btn'; videoBtn.textContent='▶';
+  videoBtn.disabled = !match.video?.trim();
+  videoBtn.title='Voir la vidéo';
+  videoBtn.onclick=()=>openVideo(videoInp.value);
+  footer.appendChild(videoBtn);
+
+  // Store ref for updateVideoBtn
+  videoInp._btn = videoBtn;
+  videoInp._card = card;
+
+  card.appendChild(footer);
+  return card;
 }
 
-function closeModal() {
-  document.getElementById('pwd-modal').style.display = 'none';
-}
-
-function applyMode() {
-  const badge  = document.getElementById('mode-badge');
-  const toggle = document.getElementById('btn-mode-toggle');
-  if (isEditor) {
-    document.body.classList.remove('reader-mode');
-    badge.className  = 'mode-badge editor';
-    badge.textContent = '✏️ Éditeur';
-    toggle.textContent = '🔒 Verrouiller';
-  } else {
-    document.body.classList.add('reader-mode');
-    badge.className  = 'mode-badge reader';
-    badge.textContent = '👁 Lecture seule';
-    toggle.textContent = '🔓 Mode éditeur';
-  }
-}
-
-// Démarrer en mode lecteur
-applyMode();
-
-
-
-function exportData() {
-  collectDOM();
-  const json = JSON.stringify(ST, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  const date = new Date().toISOString().slice(0, 10);
-  a.href     = url;
-  a.download = `roland-garros-${date}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function importData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!data.years || !Array.isArray(data.years)) throw new Error('Format invalide');
-      ST = data;
-      localStorage.setItem(SK, JSON.stringify(ST));
-      curY = ST.years.length ? ST.years[ST.years.length - 1].id : null;
-      curG = 'men';
-      renderAll();
-      alert(`✅ Import réussi — ${ST.years.length} année(s) chargée(s).`);
-    } catch (err) {
-      alert('❌ Fichier invalide : ' + err.message);
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = ''; // reset input pour pouvoir réimporter le même fichier
-}
-
-function openVideo(btn) {
-  const inp = btn.previousElementSibling;
-  const url = inp ? inp.value.trim() : '';
-  if (!url) return;
-  window.open(url.startsWith('http') ? url : 'https://' + url, '_blank', 'noopener');
-}
-
-function updateVideoBtn(inp) {
-  const btn = inp.nextElementSibling;
-  if (btn) btn.disabled = !inp.value.trim();
-  // Surbrillance rouge si vidéo renseignée
-  const wrap = inp.closest('.match-wrap');
-  if (wrap) wrap.classList.toggle('has-video', !!inp.value.trim());
-  saveST();
-}
-
-// ── ÉTOILES ──
-function setStar(roundKey, idx, n) {
-  if (!isEditor) return;
-  collectDOM();
-  const y = getY(curY); if (!y) return;
-  const match = y[curG][roundKey][idx];
-  // Clic sur la même étoile = réinitialiser à 0
-  match.stars = (match.stars === n) ? 0 : n;
-  saveST();
-  // Mettre à jour l'affichage des étoiles
-  const row = document.getElementById(`stars_${roundKey}_${idx}`);
-  if (row) {
-    row.querySelectorAll('.star').forEach(s => {
-      s.classList.toggle('lit', +s.dataset.n <= match.stars);
-    });
-  }
-}
-
-// ═══════════════════════════════════════════════════
-// WINNER / PROPAGATION
-// ═══════════════════════════════════════════════════
-
-function markWinner(roundKey, matchIdx, player, ri) {
+// ── WINNER ──
+function markWinner(rk, idx, player, ri) {
   collectDOM();
   const y = getY(curY); if (!y) return;
   const b = y[curG];
-  const match = b[roundKey][matchIdx];
+  const match = b[rk][idx];
   const ps = String(player);
   const toggling = match.w === ps;
   match.w = toggling ? null : ps;
 
   if (!toggling && ri < ROUNDS.length - 1) {
-    const nextRound = ROUNDS[ri + 1];
-    const nextMatchIdx = Math.floor(matchIdx / 2);
-    const slot = matchIdx % 2 === 0 ? 'p1' : 'p2';
-    const name = player === 1 ? match.p1 : match.p2;
-    b[nextRound.key][nextMatchIdx][slot] = name;
+    const nextRound = ROUNDS[ri+1];
+    const nextIdx = Math.floor(idx/2);
+    const slot = idx%2===0 ? 'p1' : 'p2';
+    match.w === null ? null : (b[nextRound.key][nextIdx][slot] = player===1 ? match.p1 : match.p2);
+    // Redo after setting w
+    b[nextRound.key][nextIdx][slot] = player===1 ? match.p1 : match.p2;
   }
 
-  saveST();
-  renderContent();
+  saveST(); renderContent();
 }
 
-// ═══════════════════════════════════════════════════
-// SVG CONNECTORS
-// ═══════════════════════════════════════════════════
-
-function drawAllConnectors(grid, b) {
-  grid.querySelectorAll('.conn-svg').forEach(s => s.remove());
-  const gridR = grid.getBoundingClientRect();
-
-  for (let ri = 0; ri < ROUNDS.length - 1; ri++) {
-    const curRound  = ROUNDS[ri];
-    const nextRound = ROUNDS[ri + 1];
-    const gapEl = document.getElementById(`gap_${ri}`);
-    if (!gapEl) continue;
-
-    const gapR = gapEl.getBoundingClientRect();
-    const svgW = gapR.width;
-    const svgH = grid.scrollHeight;
-
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.classList.add('conn-svg');
-    svg.setAttribute('width', svgW);
-    svg.setAttribute('height', svgH);
-    svg.style.left = (gapR.left - gridR.left) + 'px';
-    svg.style.top  = '0';
-
-    for (let ni = 0; ni < nextRound.n; ni++) {
-      const ci1 = ni * 2;
-      const ci2 = ni * 2 + 1;
-
-      const m1 = document.getElementById(`m_${curRound.key}_${ci1}`);
-      const m2 = document.getElementById(`m_${curRound.key}_${ci2}`);
-      const mn = document.getElementById(`m_${nextRound.key}_${ni}`);
-      if (!m1 || !m2 || !mn) continue;
-
-      // Lire la position réelle des pslots dans le DOM — aucun calcul approximatif
-      const ps1_1 = document.getElementById(`ps_${curRound.key}_${ci1}_1`);
-      const ps1_2 = document.getElementById(`ps_${curRound.key}_${ci1}_2`);
-      const ps2_1 = document.getElementById(`ps_${curRound.key}_${ci2}_1`);
-      const ps2_2 = document.getElementById(`ps_${curRound.key}_${ci2}_2`);
-      const psn_1 = document.getElementById(`ps_${nextRound.key}_${ni}_1`);
-      const psn_2 = document.getElementById(`ps_${nextRound.key}_${ni}_2`);
-      if (!ps1_1 || !ps1_2 || !ps2_1 || !ps2_2 || !psn_1 || !psn_2) continue;
-
-      // Centre vertical = milieu entre le haut du slot1 et le bas du slot2
-      function slotsMid(s1, s2) {
-        const r1 = s1.getBoundingClientRect();
-        const r2 = s2.getBoundingClientRect();
-        return ((r1.top + r1.bottom) / 2 + (r2.top + r2.bottom) / 2) / 2 - gapR.top;
-      }
-      const y1   = slotsMid(ps1_1, ps1_2);
-      const y2   = slotsMid(ps2_1, ps2_2);
-      const yn   = slotsMid(psn_1, psn_2);
-      const midY = (y1 + y2) / 2;
-
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', '#cbb6a8');
-      path.setAttribute('stroke-width', '1.2');
-      path.setAttribute('stroke-linecap', 'round');
-      // From m1 midpoint → middle of gap, from m2 midpoint → middle of gap
-      // then from midpoint of those → entry of next col
-      path.setAttribute('d',
-        `M0,${y1} H${svgW/2} V${midY} M0,${y2} H${svgW/2} V${midY} M${svgW/2},${midY} H${svgW}`
-      );
-      svg.appendChild(path);
-    }
-
-    grid.style.position = 'relative';
-    grid.appendChild(svg);
-  }
-}
-
-// ═══════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════
-
-if (ST.years.length) {
-  curY = ST.years[ST.years.length - 1].id;
-}
-renderAll();
-
-window.addEventListener('resize', () => {
-  if (!curY) return;
+// ── STARS ──
+function setStar(rk, idx, n) {
+  if (!isEditor) return;
+  collectDOM();
   const y = getY(curY); if (!y) return;
-  const grid = document.getElementById('bracket-grid');
-  if (grid) drawAllConnectors(grid, y[curG]);
-});
+  const m = y[curG][rk][idx];
+  m.stars = (m.stars === n) ? 0 : n;
+  saveST();
+  const row = document.getElementById(`stars_${rk}_${idx}`);
+  if (row) row.querySelectorAll('.s').forEach(s => s.classList.toggle('on', +s.dataset.n <= m.stars));
+}
+
+// ── VIDEO ──
+function openVideo(url) {
+  if (!url) return;
+  window.open(url.startsWith('http') ? url : 'https://'+url, '_blank', 'noopener');
+}
+function updateVideoBtn(inp) {
+  if (inp._btn) inp._btn.disabled = !inp.value.trim();
+  if (inp._card) inp._card.classList.toggle('has-video', !!inp.value.trim());
+  saveST();
+}
+
+// ── EDITOR MODE ──
+const EDITOR_PWD = 'toto';
+let isEditor = false;
+function toggleEditorMode() {
+  if (isEditor) { isEditor=false; applyMode(); }
+  else { document.getElementById('pwd-modal').style.display='flex'; document.getElementById('pwd-err').textContent=''; document.getElementById('pwd-input').value=''; setTimeout(()=>document.getElementById('pwd-input').focus(),50); }
+}
+function checkPassword() {
+  if (document.getElementById('pwd-input').value === EDITOR_PWD) { isEditor=true; closeModal(); applyMode(); }
+  else { document.getElementById('pwd-err').textContent='❌ Mot de passe incorrect'; document.getElementById('pwd-input').value=''; document.getElementById('pwd-input').focus(); }
+}
+function closeModal() { document.getElementById('pwd-modal').style.display='none'; }
+function applyMode() {
+  const badge=document.getElementById('mode-badge'), toggle=document.getElementById('btn-mode-toggle');
+  if (isEditor) { document.body.classList.remove('reader-mode'); badge.className='mode-badge editor'; badge.textContent='✏️ Éditeur'; toggle.textContent='🔒 Verrouiller'; }
+  else { document.body.classList.add('reader-mode'); badge.className='mode-badge reader'; badge.textContent='👁 Lecture seule'; toggle.textContent='🔓 Mode éditeur'; }
+}
+
+// ── EXPORT / IMPORT ──
+function exportData() {
+  collectDOM();
+  const blob = new Blob([JSON.stringify(ST,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`roland-garros-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try {
+      const data=JSON.parse(ev.target.result);
+      if(!data.years||!Array.isArray(data.years)) throw new Error('Format invalide');
+      ST=data; localStorage.setItem(SK,JSON.stringify(ST));
+      curY=ST.years.length?ST.years[ST.years.length-1].id:null; curG='men';
+      renderAll(); alert(`✅ Import réussi — ${ST.years.length} année(s).`);
+    } catch(err) { alert('❌ Fichier invalide : '+err.message); }
+  };
+  reader.readAsText(file); e.target.value='';
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// ── INIT ──
+applyMode();
+if (ST.years.length) curY = ST.years[ST.years.length-1].id;
+renderAll();
 </script>
 </body>
 </html>
