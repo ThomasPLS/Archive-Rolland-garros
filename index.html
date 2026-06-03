@@ -445,9 +445,13 @@
     .star-overlay .star.lit { color: #c49a3c; }
     body.reader-mode .star-overlay:not(:has(.star.lit)) { display: none; }
     body.reader-mode .star-overlay .star { pointer-events: none; }
-    .match-wrap.has-video { background: rgba(184,50,36,0.06); border-radius: 6px; }
-    .match-wrap.has-video .pslot { border-color: #e0a09a; }
-    .match-wrap.has-video .pslot.winner { border-color: var(--winner-border); }
+    .match-wrap.has-video { background: rgba(184,50,36,0.12); border-radius: 6px; outline: 1.5px solid rgba(184,50,36,0.35); outline-offset: 1px; }
+    .match-wrap.has-video .pslot { background: rgba(184,50,36,0.08); border-color: #c97b72; }
+    .match-wrap.has-video .pslot input { color: #6b1a12; }
+    .match-wrap.has-video .pslot.winner { background: var(--winner-bg); border-color: var(--winner-border); }
+    .match-wrap.has-video .pslot.winner input { color: var(--winner-text); }
+    .match-wrap.has-video .score-inp,
+    .match-wrap.has-video .video-inp { border-color: #c97b72; background: rgba(184,50,36,0.06); }
   </style>
 </head>
 <body>
